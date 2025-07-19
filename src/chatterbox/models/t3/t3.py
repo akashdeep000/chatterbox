@@ -370,7 +370,7 @@ class T3(nn.Module):
         # Track generated token ids; start with the BOS token.
         PAD_TOKEN_ID = self.hp.stop_speech_token + 1 # Assuming unused
         bos_len = bos_token.shape[1]
-        # using batch size of 1, otherwise use generated_ids[:, i] 
+        # using batch size of 1, otherwise use generated_ids[:, i]
         generated_ids = torch.full((1, bos_len + max_new_tokens), PAD_TOKEN_ID, dtype=torch.long, device=device)
         generated_ids[0, :bos_len] = bos_token
 
@@ -386,7 +386,7 @@ class T3(nn.Module):
         bos_embed = bos_embed.to(self.patched_model.dtype)
 
         stop_token_tensor = torch.tensor(self.hp.stop_speech_token, device=self.device)
-        
+
         # Fix: Set max_batch_size based on CFG usage
         effective_batch_size = 2 if cfg_weight > 0.0 else 1
 
@@ -442,8 +442,8 @@ class T3(nn.Module):
             # Convert logits to probabilities and sample the next token.
             probs = torch.softmax(logits, dim=-1)
             next_token = torch.multinomial(probs, num_samples=1)  # shape: (B, 1)
-
-            predicted.append(next_token)
+            yield next_token
+            # predicted.append(next_token)
             generated_ids[0, i + bos_len] = next_token
 
             # if i % tokens_per_slice == 0:
@@ -468,8 +468,8 @@ class T3(nn.Module):
                 kv_cache,
             )
 
-        
-        return torch.cat(predicted, dim=1)
+
+        # return torch.cat(predicted, dim=1)
 
     # @torch.compile(backend="cudagraphs", fullgraph=True)
     def _step_compilation_target(
